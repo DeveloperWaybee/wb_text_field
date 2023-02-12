@@ -1,11 +1,14 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:wb_text_field/wb_text_field.dart';
 
 import 'controller/wb_text_field_controller.dart';
 
 export 'controller/wb_text_field_controller.dart';
+export 'models/wb_text_field_option.dart';
 
 class WBTextField extends StatefulWidget {
   WBTextField({
@@ -24,6 +27,9 @@ class WBTextField extends StatefulWidget {
 class _WBTextFieldState extends State<WBTextField> {
   WBTextFieldController get controller => widget.controller;
   MediaQueryData? get mediaQuery => MediaQuery.maybeOf(context);
+
+  late OverlayState overlayState = Overlay.of(context);
+  OverlayEntry? optionsOverlayEntry;
 
   bool get hasError => controller.error != null;
   bool hasFocus = false;
@@ -293,7 +299,10 @@ class _WBTextFieldState extends State<WBTextField> {
   }
 
   void _onTap() {
-    if (isDatePicker || isTimePicker) {
+    print("_ON TAP INSIDE");
+    if (controller.items != null || controller.itemBuilderHeader != null) {
+      _showOptionsOverlay();
+    } else if (isDatePicker || isTimePicker) {
       _showDatePicker();
     } else {
       controller.focusNode.requestFocus();
@@ -301,6 +310,7 @@ class _WBTextFieldState extends State<WBTextField> {
   }
 
   void _onTapOutside(event) {
+    print("_ON TAP OUTSIDE");
     controller.focusNode.unfocus();
   }
 
@@ -341,5 +351,227 @@ class _WBTextFieldState extends State<WBTextField> {
     }
 
     dateTimePickerOpened = false;
+  }
+
+  void _showOptionsOverlay() async {
+    if (controller.itemBuilderHeader == null && controller.items == null) {
+      return;
+    }
+    if (optionsOverlayEntry != null) {
+      return;
+    }
+    optionsOverlayEntry = OverlayEntry(builder: (c) {
+      // if (optionsFirstOverlayBuild) {
+      //   WidgetsFlutterBinding.ensureInitialized()
+      //       .addPostFrameCallback((timeStamp) {
+      //     optionsFirstOverlayBuild = false;
+      //     optionsOverlayEntry?.markNeedsBuild();
+      //   });
+      // }
+      final currentContext = widget._widgetKey.currentContext;
+      final RenderBox renderBox =
+          currentContext?.findRenderObject() as RenderBox;
+      final Size size = renderBox.size; // or _widgetKey.currentContext?.size
+      final Offset offset = renderBox.localToGlobal(Offset.zero);
+
+      final windowPadding = EdgeInsets.fromWindowPadding(
+        WidgetsBinding.instance.window.viewPadding,
+        WidgetsBinding.instance.window.devicePixelRatio,
+      );
+
+      final windowInsets = EdgeInsets.fromWindowPadding(
+        WidgetsBinding.instance.window.viewInsets,
+        WidgetsBinding.instance.window.devicePixelRatio,
+      );
+
+      final topAvailableSpace =
+          offset.dy - (windowInsets.top + windowPadding.top);
+      final bottomAvailableSpace =
+          ((WidgetsBinding.instance.window.physicalSize.height /
+                  WidgetsBinding.instance.window.devicePixelRatio) -
+              (offset.dy +
+                  size.height +
+                  (windowInsets.bottom + windowPadding.bottom)));
+
+      final shouldShowAbove =
+          (bottomAvailableSpace > controller.itemBuilderMaxHeight)
+              ? false
+              : topAvailableSpace > bottomAvailableSpace;
+
+      final maxHeight = shouldShowAbove
+          ? min(topAvailableSpace, controller.itemBuilderMaxHeight)
+          : min(bottomAvailableSpace, controller.itemBuilderMaxHeight);
+
+      // You can return any widget you like here
+      // to be displayed on the Overlay
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () {
+                _removeOptionsOverlay();
+              },
+              child: ClipPath(
+                clipper: _TextFieldClipper(Path()),
+                child: Container(color: Colors.black.withOpacity(0.1)),
+              ),
+            ),
+          ),
+          Positioned(
+            top: shouldShowAbove ? null : (offset.dy + size.height),
+            bottom: shouldShowAbove
+                ? (MediaQuery.of(c).size.height - offset.dy)
+                : null,
+            left: offset.dx + 7.5,
+            width: size.width - 15,
+            child: Column(
+              children: [
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 500),
+                  opacity: 1, //optionsFirstOverlayBuild ? 0 : 1,
+                  child: Material(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      constraints: BoxConstraints(
+                        maxHeight:
+                            maxHeight, // optionsFirstOverlayBuild ? 0 : maxHeight,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: shouldShowAbove
+                              ? const Radius.circular(10)
+                              : Radius.zero,
+                          bottom: shouldShowAbove
+                              ? Radius.zero
+                              : const Radius.circular(10),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            offset: Offset(0, shouldShowAbove ? -1 : 1),
+                            blurRadius: 3,
+                            color: Colors.grey.withOpacity(0.25),
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: SingleChildScrollView(
+                        reverse: shouldShowAbove,
+                        padding: EdgeInsets.zero,
+                        child: IntrinsicHeight(
+                          child: Column(
+                            verticalDirection: shouldShowAbove
+                                ? VerticalDirection.up
+                                : VerticalDirection.down,
+                            children: [
+                              if (controller.itemBuilderHeader != null)
+                                InkWell(
+                                  onTap: (controller.itemBuilderHeaderTapped ==
+                                          null)
+                                      ? null
+                                      : () {
+                                          _removeOptionsOverlay();
+                                          controller.itemBuilderHeaderTapped!();
+                                          // _onResignFocus();
+                                          if (controller.onFieldSubmitted !=
+                                              null) {
+                                            controller.onFieldSubmitted!(null);
+                                          }
+                                        },
+                                  child: controller.itemBuilderHeader!,
+                                ),
+                              if (controller.filteredItems.isNotEmpty)
+                                ...List.generate(
+                                    max(
+                                        0,
+                                        (controller.itemsSeparator != null)
+                                            ? (controller
+                                                        .filteredItems.length) *
+                                                    2 -
+                                                1
+                                            : controller.filteredItems.length),
+                                    (index) {
+                                  final int itemIndex =
+                                      (controller.itemsSeparator != null)
+                                          ? index ~/ 2
+                                          : index;
+                                  final Widget? listWidget;
+
+                                  if (index.isEven ||
+                                      controller.itemsSeparator == null) {
+                                    listWidget = InkWell(
+                                      onTap: (controller.itemDidSelect == null)
+                                          ? null
+                                          : () async {
+                                              _removeOptionsOverlay();
+                                              controller.editingController
+                                                  .text = await controller
+                                                      .itemDidSelect!(
+                                                  controller
+                                                      .filteredItems[itemIndex]
+                                                      .matchText);
+                                              // controller.focusNode.nextFocus();
+                                              // _onResignFocus();
+                                              // if (controller.onFieldSubmitted != null) {
+                                              //   controller.onFieldSubmitted!(null);
+                                              // }
+                                            },
+                                      child:
+                                          controller.filteredItems[itemIndex],
+                                    );
+                                  } else {
+                                    if (controller.itemsSeparator == null)
+                                      return null;
+                                    listWidget = controller.itemsSeparator;
+                                  }
+                                  return Flexible(
+                                      child: listWidget ??
+                                          const SizedBox.shrink());
+                                }).whereType<Widget>(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    });
+    // Inserting the OverlayEntry into the Overlay
+    if (optionsOverlayEntry != null && !optionsOverlayEntry!.mounted) {
+      overlayState.insert(optionsOverlayEntry!);
+    }
+  }
+
+  void _removeOptionsOverlay() {
+    if (optionsOverlayEntry == null) {
+      // optionsFirstOverlayBuild = true;
+      return;
+    }
+    // optionsOverlayRect = null;
+    optionsOverlayEntry?.remove();
+    optionsOverlayEntry = null;
+    // optionsFirstOverlayBuild = true;
+    controller.focusNode.unfocus();
+  }
+}
+
+class _TextFieldClipper extends CustomClipper<Path> {
+  _TextFieldClipper(this.path);
+
+  final Path path;
+
+  @override
+  Path getClip(Size size) {
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    return true;
   }
 }

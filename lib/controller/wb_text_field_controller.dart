@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wb_text_field/models/wb_text_field_option.dart';
 
 class WBTextFieldController {
   WBTextFieldController({
@@ -55,7 +56,7 @@ class WBTextFieldController {
     this.itemBuilderMaxHeight = 200,
     this.itemBuilderHeader,
     this.itemBuilderHeaderTapped,
-    // this.items,
+    this.items,
     this.itemsSeparator,
     this.itemDidSelect,
     // Options Selection with Search
@@ -126,8 +127,28 @@ class WBTextFieldController {
   final double itemBuilderMaxHeight;
   final Widget? itemBuilderHeader;
   final Future<void> Function()? itemBuilderHeaderTapped;
-  // final List<WBTextFieldOption>? items;
+  final List<WBTextFieldOption>? items;
   final Widget? itemsSeparator;
   final Future<String> Function(String id)? itemDidSelect;
   // -- Drop Down
+
+  List<WBTextFieldOption> get filteredItems {
+    var filteredItems = items?.toList() ?? [];
+    if ((enableItemSearch ?? false) && editingController.text.isNotEmpty) {
+      final text = editingController.text.replaceAll(" ", "").toLowerCase();
+      filteredItems.sort(
+        (a, b) {
+          final aValue = a.matchText.replaceAll(" ", "").toLowerCase();
+          final bValue = b.matchText.replaceAll(" ", "").toLowerCase();
+
+          final match = text
+              .allMatches(bValue)
+              .length
+              .compareTo(text.allMatches(aValue).length);
+          return match;
+        },
+      );
+    }
+    return filteredItems;
+  }
 }

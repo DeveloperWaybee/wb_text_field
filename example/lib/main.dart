@@ -20,6 +20,17 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+
+    late final list = List.generate(100, (index) {
+      return WBTextFieldOption(
+        uniqueId: "$index",
+        matchText: "$index",
+        child: ListTile(
+          title: Text("$index"),
+        ),
+      );
+    });
+  
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -42,6 +53,20 @@ class _MyAppState extends State<MyApp> {
                     // },
                     // suffix: Icons.ac_unit_rounded,
                     // suffixColor: Colors.grey,
+                    itemBuilderMaxHeight: 200,
+                    enableItemSearch: false,
+                    itemBuilderHeader: const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      child: Text("Create New +"),
+                    ),
+                    itemBuilderHeaderTapped: () async {
+                      print("Create New +");
+                    },
+                    items: list,
+                    itemDidSelect: (id) async {
+                      return list.firstWhere((e) => e.uniqueId == id).matchText;
+                    },
                   ),
                 ),
               ),
