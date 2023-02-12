@@ -57,6 +57,7 @@ final controller = WBTextFieldController(
   label: "Date of Birth",
   isClearEnable: true,
   clearVisibilityAlways: true,
+  maxLength: 10,
   // datePicker: true,
   // timePicker: true,
   // didSelectDateTime: (date, time) {

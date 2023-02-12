@@ -3,6 +3,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:wb_text_field/wb_text_field.dart';
 
 import 'controller/wb_text_field_controller.dart';
@@ -232,6 +233,9 @@ class _WBTextFieldState extends State<WBTextField> {
           return readOnly;
         }(),
         enabled: controller.enabled,
+        inputFormatters: [
+          LengthLimitingTextInputFormatter(controller.maxLength),
+        ],
         decoration: InputDecoration(
           contentPadding: contentPadding,
           border: InputBorder.none,
@@ -244,7 +248,6 @@ class _WBTextFieldState extends State<WBTextField> {
         ),
         style: style,
         textAlignVertical: verticalAlignment,
-        maxLength: controller.maxLength,
         maxLines: controller.maxLines,
         keyboardType: controller.textInputType,
         textInputAction: controller.returnKeyType,
