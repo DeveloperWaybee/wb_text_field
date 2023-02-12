@@ -45,15 +45,14 @@ class _WBTextFieldState extends State<WBTextField> {
   /// Get Content Padding
   ///
   EdgeInsets get contentPadding {
-    return controller.padding ??
-        EdgeInsets.fromLTRB(
-          16,
-          10,
+    return EdgeInsets.fromLTRB(
+      controller.padding.left,
+      controller.padding.top,
           ((controller.suffix != null) ||
                   !(showClear && controller.isClearEnable))
-              ? 16
+          ? controller.padding.right
               : 0,
-          10,
+      controller.padding.bottom,
         );
   }
 
@@ -67,14 +66,10 @@ class _WBTextFieldState extends State<WBTextField> {
   ///
   TextStyle? get style {
     return ((hasFocus)
-            ? controller.focusStyle ??
-                TextStyle(color: Theme.of(context).textTheme.labelMedium?.color)
+            ? controller.focusStyle
             : (hasError)
-                ? controller.errorStyle ??
-                    TextStyle(color: Theme.of(context).colorScheme.error)
-                : controller.style ??
-                    TextStyle(
-                        color: Theme.of(context).textTheme.labelMedium?.color))
+                ? controller.errorStyle
+                : controller.style)
         .copyWith(height: lineHeight);
   }
 
@@ -82,17 +77,11 @@ class _WBTextFieldState extends State<WBTextField> {
   ///
   TextStyle? get labelStyle {
     if (hasFocus) {
-      return (controller.focusLabelStyle ??
-              TextStyle(color: Theme.of(context).colorScheme.secondary))
-          .copyWith(height: labelLineHeight);
+      return controller.focusLabelStyle.copyWith(height: labelLineHeight);
     } else if (hasError) {
-      return (controller.errorLabelStyle ??
-              TextStyle(color: Theme.of(context).colorScheme.error))
-          .copyWith(height: labelLineHeight);
+      return controller.errorLabelStyle.copyWith(height: labelLineHeight);
     } else {
-      return (controller.labelStyle ??
-              TextStyle(color: Theme.of(context).hintColor))
-          .copyWith(height: labelLineHeight);
+      return controller.labelStyle.copyWith(height: labelLineHeight);
     }
   }
 
@@ -107,16 +96,11 @@ class _WBTextFieldState extends State<WBTextField> {
   ///
   TextStyle? get hintStyle {
     if (hasFocus) {
-      return (controller.focusHintStyle ??
-              TextStyle(color: Theme.of(context).colorScheme.secondary))
-          .copyWith(height: lineHeight);
+      return controller.focusHintStyle.copyWith(height: lineHeight);
     } else if (hasError) {
-      return controller.errorHintStyle ??
-          TextStyle(color: Theme.of(context).colorScheme.error);
+      return controller.errorHintStyle.copyWith(height: lineHeight);
     } else {
-      return (controller.hintStyle ??
-              TextStyle(color: Theme.of(context).hintColor))
-          .copyWith(height: lineHeight);
+      return controller.hintStyle.copyWith(height: lineHeight);
     }
   }
 
@@ -405,7 +389,7 @@ class _WBTextFieldState extends State<WBTextField> {
       textFieldPath.addRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height),
-          const Radius.circular(10),
+          controller.borderRadius.bottomRight,
         ),
       );
       textFieldPath.close();
@@ -495,11 +479,11 @@ class _WBTextFieldState extends State<WBTextField> {
                           color: Colors.white,
                           borderRadius: BorderRadius.vertical(
                             top: shouldShowAbove
-                                ? const Radius.circular(10)
+                                ? controller.borderRadius.bottomRight
                                 : Radius.zero,
                             bottom: shouldShowAbove
                                 ? Radius.zero
-                                : const Radius.circular(10),
+                                : controller.borderRadius.bottomRight,
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -586,8 +570,9 @@ class _WBTextFieldState extends State<WBTextField> {
                                             controller.filteredItems[itemIndex],
                                       );
                                     } else {
-                                      if (controller.itemsSeparator == null)
+                                      if (controller.itemsSeparator == null) {
                                         return null;
+                                      }
                                       listWidget = controller.itemsSeparator;
                                     }
                                     return Flexible(
