@@ -60,12 +60,13 @@ class _WBTextFieldState extends State<WBTextField> {
   TextStyle? get style {
     return ((hasFocus)
             ? controller.focusStyle ??
-                TextStyle(color: Theme.of(context).colorScheme.secondary)
+                TextStyle(color: Theme.of(context).textTheme.labelMedium?.color)
             : (hasError)
                 ? controller.errorStyle ??
                     TextStyle(color: Theme.of(context).colorScheme.error)
                 : controller.style ??
-                    TextStyle(color: Theme.of(context).hintColor))
+                    TextStyle(
+                        color: Theme.of(context).textTheme.labelMedium?.color))
         .copyWith(height: lineHeight);
   }
 
@@ -92,7 +93,7 @@ class _WBTextFieldState extends State<WBTextField> {
   double? get labelLineHeight =>
       ((mediaQuery?.size.width ?? 0) > 600 && controller.label != null)
           ? 1
-          : null;
+          : 0.75;
 
   /// Get Hint Style
   ///
@@ -116,12 +117,13 @@ class _WBTextFieldState extends State<WBTextField> {
   double? get lineHeight =>
       ((mediaQuery?.size.width ?? 0) > 600 && controller.label != null)
           ? 1.5
-          : 1.25;
+          : 1.4;
 
   /// Get Suffix Icon
   ///
   Widget? get suffixIcon {
-    return (showClear && controller.isClearEnable)
+    return (controller.clearVisibilityAlways ||
+            (showClear && controller.isClearEnable))
         ? IconButton(
             padding: EdgeInsets.zero,
             onPressed: () {
@@ -131,7 +133,7 @@ class _WBTextFieldState extends State<WBTextField> {
             iconSize: 20,
             icon: Icon(
               Icons.close_rounded,
-              color: Theme.of(context).colorScheme.secondary,
+              color: controller.clearButtonColor,
             ),
           )
         : (controller.suffix != null)
@@ -312,17 +314,19 @@ class _WBTextFieldState extends State<WBTextField> {
     if (isDatePicker) {
       selectedDate = await showDatePicker(
         context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime.now().copyWith(year: 1900),
-        lastDate: DateTime.now().copyWith(year: 2100),
+        initialDate: controller.initialDate,
+        currentDate: controller.currentDate,
+        firstDate: controller.firstDate,
+        lastDate: controller.lastDate,
         initialEntryMode: DatePickerEntryMode.calendar,
+        keyboardType: TextInputType.datetime,
       );
     }
 
-    if (isTimePicker) {
+    if (isTimePicker && !(isDatePicker && selectedDate == null)) {
       selectedTime = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.now(),
+        initialTime: controller.initialTime,
       );
     }
 

@@ -28,6 +28,8 @@ class WBTextFieldController {
     this.suffixColor = const Color(0x00000000),
     this.suffixAction,
     this.isClearEnable = true,
+    this.clearVisibilityAlways = false,
+    this.clearButtonColor = const Color(0xA1000000),
     this.textInputType,
     this.returnKeyType,
     this.maxLength,
@@ -40,7 +42,12 @@ class WBTextFieldController {
     // Text Field
     // Date Time Picker
     this.datePicker,
+    DateTime? initialDate,
+    DateTime? currentDate,
+    DateTime? firstDate,
+    DateTime? lastDate,
     this.timePicker,
+    TimeOfDay? initialTime,
     this.didSelectDateTime,
     // Date Time Picker
     // Options Selection with Search
@@ -59,6 +66,11 @@ class WBTextFieldController {
     this.borderRadius = borderRadius ?? BorderRadius.circular(10);
     this.focusBorder = focusBorder ?? Border.all(color: Colors.blue);
     this.errorBorder = errorBorder ?? Border.all(color: Colors.red);
+    this.initialDate = initialDate ?? DateTime.now();
+    this.currentDate = currentDate ?? DateTime.now();
+    this.firstDate = firstDate ?? DateTime.now().copyWith(year: 1900);
+    this.lastDate = lastDate ?? DateTime.now().copyWith(year: 2100);
+    this.initialTime = initialTime ?? TimeOfDay.now();
   }
 
   late final TextEditingController editingController;
@@ -86,6 +98,8 @@ class WBTextFieldController {
   final Color suffixColor;
   final void Function(String text)? suffixAction;
   final bool isClearEnable;
+  final bool clearVisibilityAlways;
+  final Color clearButtonColor;
   final TextInputType? textInputType;
   final TextInputAction? returnKeyType;
   final int? maxLength;
@@ -98,7 +112,12 @@ class WBTextFieldController {
 
   // -- Date Picker
   final bool? datePicker;
+  late final DateTime initialDate;
+  late final DateTime currentDate;
+  late final DateTime firstDate;
+  late final DateTime lastDate;
   final bool? timePicker;
+  late final TimeOfDay initialTime;
   final String Function(DateTime? date, TimeOfDay? time)? didSelectDateTime;
   // -- Date Picker
 

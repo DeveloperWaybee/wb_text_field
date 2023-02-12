@@ -26,7 +26,6 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: LayoutBuilder(builder: (context, constraint) {
-          print(constraint.biggest.width);
           return Column(
             children: [
               Padding(
@@ -34,11 +33,13 @@ class _MyAppState extends State<MyApp> {
                 child: WBTextField(
                   controller: WBTextFieldController(
                     label: "Date of Birth",
-                    datePicker: true,
-                    timePicker: true,
-                    didSelectDateTime: (date, time) {
-                      return "${date.toString()} ${time.toString()}";
-                    },
+                    isClearEnable: true,
+                    clearVisibilityAlways: true,
+                    // datePicker: true,
+                    // timePicker: true,
+                    // didSelectDateTime: (date, time) {
+                    //   return "${date.toString()} ${time.toString()}";
+                    // },
                     // suffix: Icons.ac_unit_rounded,
                     // suffixColor: Colors.grey,
                   ),
