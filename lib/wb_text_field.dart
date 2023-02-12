@@ -30,6 +30,7 @@ class _WBTextFieldState extends State<WBTextField> {
 
   late OverlayState overlayState = Overlay.of(context);
   OverlayEntry? optionsOverlayEntry;
+  bool animateOptionsOverlay = false;
 
   bool get hasError => controller.error != null;
   bool hasFocus = false;
@@ -255,6 +256,11 @@ class _WBTextFieldState extends State<WBTextField> {
   ///
   void initialSetup() {
     controller.editingController.addListener(() {
+      WidgetsFlutterBinding.ensureInitialized()
+          .addPostFrameCallback((timeStamp) {
+        optionsOverlayEntry?.markNeedsBuild();
+      });
+
       if (showClear !=
               (hasFocus && controller.editingController.text.isNotEmpty) &&
           controller.isClearEnable) {
@@ -268,22 +274,25 @@ class _WBTextFieldState extends State<WBTextField> {
 
     controller.focusNode.addListener(() {
       if (hasFocus != controller.focusNode.hasFocus) {
-        setState(() {
-          hasFocus = controller.focusNode.hasFocus;
-          if (readOnly && hasFocus) {
-            if (isDatePicker || isTimePicker) {
-              controller.focusNode.unfocus();
-            } else {
-              _onTap();
+        WidgetsFlutterBinding.ensureInitialized()
+            .addPostFrameCallback((timeStamp) async {
+          setState(() {
+            hasFocus = controller.focusNode.hasFocus;
+            if (readOnly && hasFocus) {
+              if (isDatePicker || isTimePicker) {
+                controller.focusNode.unfocus();
+              } else {
+                _onTap();
+              }
+            } else if (!hasFocus) {
+              // WidgetsFlutterBinding.ensureInitialized()
+              //     .addPostFrameCallback((timeStamp) async {
+              //   Future.delayed(const Duration(milliseconds: 500)).then((value) {
+              //     // _onResignFocus();
+              //   });
+              // });
             }
-          } else if (!hasFocus) {
-            WidgetsFlutterBinding.ensureInitialized()
-                .addPostFrameCallback((timeStamp) async {
-              Future.delayed(const Duration(milliseconds: 500)).then((value) {
-                // _onResignFocus();
-              });
-            });
-          }
+          });
         });
       }
       if (showClear !=
@@ -301,7 +310,11 @@ class _WBTextFieldState extends State<WBTextField> {
   void _onTap() {
     print("_ON TAP INSIDE");
     if (controller.items != null || controller.itemBuilderHeader != null) {
-      _showOptionsOverlay();
+      WidgetsFlutterBinding.ensureInitialized()
+          .addPostFrameCallback((timeStamp) async {
+        // await Future.delayed(const Duration(milliseconds: 330));
+        _showOptionsOverlay();
+      });
     } else if (isDatePicker || isTimePicker) {
       _showDatePicker();
     } else {
@@ -311,6 +324,9 @@ class _WBTextFieldState extends State<WBTextField> {
 
   void _onTapOutside(event) {
     print("_ON TAP OUTSIDE");
+    if (optionsOverlayEntry != null) {
+      return;
+    }
     controller.focusNode.unfocus();
   }
 
@@ -354,6 +370,7 @@ class _WBTextFieldState extends State<WBTextField> {
   }
 
   void _showOptionsOverlay() async {
+    animateOptionsOverlay = false;
     if (controller.itemBuilderHeader == null && controller.items == null) {
       return;
     }
@@ -361,6 +378,7 @@ class _WBTextFieldState extends State<WBTextField> {
       return;
     }
     optionsOverlayEntry = OverlayEntry(builder: (c) {
+      final mediaQuery = MediaQuery.maybeOf(c);
       // if (optionsFirstOverlayBuild) {
       //   WidgetsFlutterBinding.ensureInitialized()
       //       .addPostFrameCallback((timeStamp) {
@@ -373,6 +391,27 @@ class _WBTextFieldState extends State<WBTextField> {
           currentContext?.findRenderObject() as RenderBox;
       final Size size = renderBox.size; // or _widgetKey.currentContext?.size
       final Offset offset = renderBox.localToGlobal(Offset.zero);
+
+      final screenPath = Path();
+      screenPath.addRect(
+        Rect.fromLTWH(
+            0, 0, mediaQuery?.size.width ?? 0, mediaQuery?.size.height ?? 0),
+      );
+      screenPath.close();
+      final textFieldPath = Path();
+      textFieldPath.addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height),
+          const Radius.circular(10),
+        ),
+      );
+      textFieldPath.close();
+
+      final finalPath = Path.combine(
+        PathOperation.difference,
+        screenPath,
+        textFieldPath,
+      );
 
       final windowPadding = EdgeInsets.fromWindowPadding(
         WidgetsBinding.instance.window.viewPadding,
@@ -402,143 +441,168 @@ class _WBTextFieldState extends State<WBTextField> {
           ? min(topAvailableSpace, controller.itemBuilderMaxHeight)
           : min(bottomAvailableSpace, controller.itemBuilderMaxHeight);
 
+      final top = shouldShowAbove ? null : (offset.dy + size.height);
+      final bottom =
+          shouldShowAbove ? ((mediaQuery?.size.height ?? 0) - offset.dy) : null;
+      final left = offset.dx + 7.5;
+      final width = size.width - 15;
+
+      Future.delayed(const Duration(milliseconds: 300)).then((value) {
+        animateOptionsOverlay = true;
+        optionsOverlayEntry?.markNeedsBuild();
+      });
       // You can return any widget you like here
       // to be displayed on the Overlay
-      return Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () {
-                _removeOptionsOverlay();
-              },
-              child: ClipPath(
-                clipper: _TextFieldClipper(Path()),
-                child: Container(color: Colors.black.withOpacity(0.1)),
+      return AnimatedOpacity(
+        duration: const Duration(milliseconds: 330),
+        opacity: animateOptionsOverlay ? 1 : 0,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  _removeOptionsOverlay();
+                },
+                child: ClipPath(
+                  clipper: _TextFieldClipper(finalPath),
+                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                  child: Container(color: Colors.black.withOpacity(0.1)),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            top: shouldShowAbove ? null : (offset.dy + size.height),
-            bottom: shouldShowAbove
-                ? (MediaQuery.of(c).size.height - offset.dy)
-                : null,
-            left: offset.dx + 7.5,
-            width: size.width - 15,
-            child: Column(
-              children: [
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 500),
-                  opacity: 1, //optionsFirstOverlayBuild ? 0 : 1,
-                  child: Material(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 100),
-                      constraints: BoxConstraints(
-                        maxHeight:
-                            maxHeight, // optionsFirstOverlayBuild ? 0 : maxHeight,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(
-                          top: shouldShowAbove
-                              ? const Radius.circular(10)
-                              : Radius.zero,
-                          bottom: shouldShowAbove
-                              ? Radius.zero
-                              : const Radius.circular(10),
+            Positioned(
+              top: top,
+              bottom: bottom,
+              left: left,
+              width: width,
+              child: Column(
+                children: [
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 500),
+                    opacity: 1, //optionsFirstOverlayBuild ? 0 : 1,
+                    child: Material(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 100),
+                        constraints: BoxConstraints(
+                          minHeight: 50,
+                          maxHeight:
+                              maxHeight, // optionsFirstOverlayBuild ? 0 : maxHeight,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            offset: Offset(0, shouldShowAbove ? -1 : 1),
-                            blurRadius: 3,
-                            color: Colors.grey.withOpacity(0.25),
-                            spreadRadius: 2,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.vertical(
+                            top: shouldShowAbove
+                                ? const Radius.circular(10)
+                                : Radius.zero,
+                            bottom: shouldShowAbove
+                                ? Radius.zero
+                                : const Radius.circular(10),
                           ),
-                        ],
-                      ),
-                      child: SingleChildScrollView(
-                        reverse: shouldShowAbove,
-                        padding: EdgeInsets.zero,
-                        child: IntrinsicHeight(
-                          child: Column(
-                            verticalDirection: shouldShowAbove
-                                ? VerticalDirection.up
-                                : VerticalDirection.down,
-                            children: [
-                              if (controller.itemBuilderHeader != null)
-                                InkWell(
-                                  onTap: (controller.itemBuilderHeaderTapped ==
-                                          null)
-                                      ? null
-                                      : () {
-                                          _removeOptionsOverlay();
-                                          controller.itemBuilderHeaderTapped!();
-                                          // _onResignFocus();
-                                          if (controller.onFieldSubmitted !=
-                                              null) {
-                                            controller.onFieldSubmitted!(null);
-                                          }
-                                        },
-                                  child: controller.itemBuilderHeader!,
-                                ),
-                              if (controller.filteredItems.isNotEmpty)
-                                ...List.generate(
-                                    max(
-                                        0,
-                                        (controller.itemsSeparator != null)
-                                            ? (controller
-                                                        .filteredItems.length) *
-                                                    2 -
-                                                1
-                                            : controller.filteredItems.length),
-                                    (index) {
-                                  final int itemIndex =
-                                      (controller.itemsSeparator != null)
-                                          ? index ~/ 2
-                                          : index;
-                                  final Widget? listWidget;
-
-                                  if (index.isEven ||
-                                      controller.itemsSeparator == null) {
-                                    listWidget = InkWell(
-                                      onTap: (controller.itemDidSelect == null)
-                                          ? null
-                                          : () async {
-                                              _removeOptionsOverlay();
+                          boxShadow: [
+                            BoxShadow(
+                              offset: Offset(0, shouldShowAbove ? -1 : 1),
+                              blurRadius: 3,
+                              color: Colors.grey.withOpacity(0.25),
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: SingleChildScrollView(
+                          reverse: shouldShowAbove,
+                          padding: EdgeInsets.zero,
+                          child: IntrinsicHeight(
+                            child: Column(
+                              verticalDirection: shouldShowAbove
+                                  ? VerticalDirection.up
+                                  : VerticalDirection.down,
+                              children: [
+                                if (controller.itemBuilderHeader != null)
+                                  InkWell(
+                                    onTap: (controller
+                                                .itemBuilderHeaderTapped ==
+                                            null)
+                                        ? null
+                                        : () async {
+                                            _removeOptionsOverlay();
+                                            final newText = await controller
+                                                    .itemBuilderHeaderTapped!(
+                                                controller
+                                                    .editingController.text);
+                                            if (newText != null) {
                                               controller.editingController
-                                                  .text = await controller
-                                                      .itemDidSelect!(
-                                                  controller
-                                                      .filteredItems[itemIndex]
-                                                      .matchText);
-                                              // controller.focusNode.nextFocus();
-                                              // _onResignFocus();
-                                              // if (controller.onFieldSubmitted != null) {
-                                              //   controller.onFieldSubmitted!(null);
-                                              // }
-                                            },
-                                      child:
-                                          controller.filteredItems[itemIndex],
-                                    );
-                                  } else {
-                                    if (controller.itemsSeparator == null)
-                                      return null;
-                                    listWidget = controller.itemsSeparator;
-                                  }
-                                  return Flexible(
-                                      child: listWidget ??
-                                          const SizedBox.shrink());
-                                }).whereType<Widget>(),
-                            ],
+                                                  .text = newText;
+                                            }
+                                            // _onResignFocus();
+                                            if (controller.onFieldSubmitted !=
+                                                null) {
+                                              controller
+                                                  .onFieldSubmitted!(null);
+                                            }
+                                          },
+                                    child: controller.itemBuilderHeader!,
+                                  ),
+                                if (controller.filteredItems.isNotEmpty)
+                                  ...List.generate(
+                                      max(
+                                          0,
+                                          (controller.itemsSeparator != null)
+                                              ? (controller.filteredItems
+                                                          .length) *
+                                                      2 -
+                                                  1
+                                              : controller.filteredItems
+                                                  .length), (index) {
+                                    final int itemIndex =
+                                        (controller.itemsSeparator != null)
+                                            ? index ~/ 2
+                                            : index;
+                                    final Widget? listWidget;
+
+                                    if (index.isEven ||
+                                        controller.itemsSeparator == null) {
+                                      listWidget = InkWell(
+                                        onTap:
+                                            (controller.itemDidSelect == null)
+                                                ? null
+                                                : () async {
+                                                    _removeOptionsOverlay();
+                                                    controller.editingController
+                                                        .text = await controller
+                                                            .itemDidSelect!(
+                                                        controller
+                                                            .filteredItems[
+                                                                itemIndex]
+                                                            .matchText);
+                                                    // controller.focusNode.nextFocus();
+                                                    // _onResignFocus();
+                                                    // if (controller.onFieldSubmitted != null) {
+                                                    //   controller.onFieldSubmitted!(null);
+                                                    // }
+                                                  },
+                                        child:
+                                            controller.filteredItems[itemIndex],
+                                      );
+                                    } else {
+                                      if (controller.itemsSeparator == null)
+                                        return null;
+                                      listWidget = controller.itemsSeparator;
+                                    }
+                                    return Flexible(
+                                        child: listWidget ??
+                                            const SizedBox.shrink());
+                                  }).whereType<Widget>(),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     });
     // Inserting the OverlayEntry into the Overlay
@@ -552,6 +616,7 @@ class _WBTextFieldState extends State<WBTextField> {
       // optionsFirstOverlayBuild = true;
       return;
     }
+    animateOptionsOverlay = false;
     // optionsOverlayRect = null;
     optionsOverlayEntry?.remove();
     optionsOverlayEntry = null;

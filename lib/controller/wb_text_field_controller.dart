@@ -126,7 +126,7 @@ class WBTextFieldController {
   final bool? enableItemSearch;
   final double itemBuilderMaxHeight;
   final Widget? itemBuilderHeader;
-  final Future<void> Function()? itemBuilderHeaderTapped;
+  final Future<String?> Function(String)? itemBuilderHeaderTapped;
   final List<WBTextFieldOption>? items;
   final Widget? itemsSeparator;
   final Future<String> Function(String id)? itemDidSelect;
