@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:wb_text_field/wb_text_field.dart';
 
 void main() {
@@ -16,8 +13,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _wbTextFieldPlugin = WbTextField();
-
   @override
   void initState() {
     super.initState();
@@ -30,9 +25,28 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-          child: Text('Running on'),
-        ),
+        body: LayoutBuilder(builder: (context, constraint) {
+          print(constraint.biggest.width);
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: WBTextField(
+                  controller: WBTextFieldController(
+                    label: "Date of Birth",
+                    datePicker: true,
+                    timePicker: true,
+                    didSelectDateTime: (date, time) {
+                      return "${date.toString()} ${time.toString()}";
+                    },
+                    // suffix: Icons.ac_unit_rounded,
+                    // suffixColor: Colors.grey,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
       ),
     );
   }
