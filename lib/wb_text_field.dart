@@ -48,12 +48,11 @@ class _WBTextFieldState extends State<WBTextField> {
     return EdgeInsets.fromLTRB(
       controller.padding.left,
       controller.padding.top,
-          ((controller.suffix != null) ||
-                  !(showClear && controller.isClearEnable))
+      ((controller.suffix != null) || !(showClear && controller.isClearEnable))
           ? controller.padding.right
-              : 0,
+          : 0,
       controller.padding.bottom,
-        );
+    );
   }
 
   /// Get Label
@@ -218,7 +217,7 @@ class _WBTextFieldState extends State<WBTextField> {
         }(),
         enabled: controller.enabled,
         inputFormatters: [
-          LengthLimitingTextInputFormatter(controller.maxLength),
+          TextInputFormatter.withFunction(controller.inputFormatter),
         ],
         decoration: InputDecoration(
           contentPadding: contentPadding,
@@ -235,6 +234,8 @@ class _WBTextFieldState extends State<WBTextField> {
         maxLines: controller.maxLines,
         keyboardType: controller.textInputType,
         textInputAction: controller.returnKeyType,
+        obscureText: controller.obscureText,
+        obscuringCharacter: controller.obscuringCharacter,
       ),
     );
   }

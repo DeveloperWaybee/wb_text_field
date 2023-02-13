@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:wb_text_field/config/wb_text_field_default_config.dart';
 import 'package:wb_text_field/models/wb_text_field_option.dart';
 
@@ -48,6 +51,8 @@ class WBTextFieldController {
     ),
     maxLines: 1,
     maxLength: 200,
+    obscureText: false,
+    obscuringCharacter: "*",
     isClearEnable: true,
     clearButtonColor: const Color(0xFF9A9A9A),
     clearVisibilityAlways: false,
@@ -94,6 +99,9 @@ class WBTextFieldController {
     int? maxLength,
     int? maxLines,
     this.enabled,
+    bool? obscureText,
+    String? obscuringCharacter,
+    TextInputFormatFunction? inputFormatter,
     this.didChange,
     this.onSaved,
     this.onEditingComplete,
@@ -151,6 +159,37 @@ class WBTextFieldController {
         clearButtonColor ?? WBTextFieldController.config.clearButtonColor;
     this.maxLength = maxLength ?? WBTextFieldController.config.maxLength;
     this.maxLines = maxLines ?? WBTextFieldController.config.maxLines;
+    this.obscureText = obscureText ?? WBTextFieldController.config.obscureText;
+    this.obscuringCharacter =
+        obscuringCharacter ?? WBTextFieldController.config.obscuringCharacter;
+    this.inputFormatter = (oldValue, newValue) {
+      if (newValue.text.length > this.maxLength) {
+        return oldValue;
+      } else {
+        if (inputFormatter != null) {
+          return inputFormatter(oldValue, newValue);
+        } else {
+          return newValue;
+        }
+      }
+      // final textLastIndex = min(this.maxLength, newValue.text.length);
+      // return inputFormatter!(
+      //   oldValue,
+      //   TextEditingValue(
+      //     text: newValue.text.substring(0, textLastIndex),
+      //     composing: TextRange(
+      //       start: newValue.composing.start,
+      //       end: min(newValue.composing.end, textLastIndex),
+      //     ),
+      //     selection: TextSelection(
+      //       baseOffset: newValue.selection.baseOffset,
+      //       extentOffset: min(newValue.selection.extentOffset, textLastIndex),
+      //       affinity: newValue.selection.affinity,
+      //       isDirectional: newValue.selection.isDirectional,
+      //     ),
+      //   ),
+      // );
+    };
     this.initialDate = initialDate ?? WBTextFieldController.config.initialDate;
     this.currentDate = currentDate ?? WBTextFieldController.config.currentDate;
     this.firstDate = firstDate ?? WBTextFieldController.config.firstDate;
@@ -192,6 +231,9 @@ class WBTextFieldController {
   late final int maxLength;
   late final int maxLines;
   final bool? enabled;
+  late final bool obscureText;
+  late final String obscuringCharacter;
+  late final TextInputFormatFunction inputFormatter;
   final void Function(String text)? didChange;
   final void Function(String?)? onSaved;
   final void Function(String)? onEditingComplete;

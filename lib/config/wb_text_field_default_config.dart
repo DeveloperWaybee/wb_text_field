@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class WBTextFieldDefaultConfig {
   WBTextFieldDefaultConfig({
@@ -24,6 +25,8 @@ class WBTextFieldDefaultConfig {
     required this.clearButtonColor,
     required this.maxLines,
     required this.maxLength,
+    required this.obscureText,
+    required this.obscuringCharacter,
     // Text Field
     // Date Time Picker
     required this.initialDate,
@@ -58,6 +61,8 @@ class WBTextFieldDefaultConfig {
   Color clearButtonColor;
   int maxLength;
   int maxLines;
+  bool obscureText;
+  String obscuringCharacter;
 
   // -- Date Picker
   DateTime initialDate;
