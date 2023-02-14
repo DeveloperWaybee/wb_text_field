@@ -166,7 +166,7 @@ class _WBTextFieldState extends State<WBTextField> {
   @override
   Widget build(BuildContext context) {
     return Focus(
-      focusNode: controller.focusNode,
+      // focusNode: controller.focusNode,
       onFocusChange: (value) {
         if (hasFocus != value) {
           WidgetsFlutterBinding.ensureInitialized()
