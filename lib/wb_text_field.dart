@@ -307,7 +307,7 @@ class _WBTextFieldState extends State<WBTextField> {
     } else if (isDatePicker || isTimePicker) {
       _showDatePicker();
     } else {
-      controller.focusNode.requestFocus();
+      // controller.focusNode.requestFocus();
     }
   }
 
