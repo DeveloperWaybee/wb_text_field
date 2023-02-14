@@ -236,6 +236,7 @@ class _WBTextFieldState extends State<WBTextField> {
         textInputAction: controller.returnKeyType,
         obscureText: controller.obscureText,
         obscuringCharacter: controller.obscuringCharacter,
+        textCapitalization: controller.textCapitalization,
       ),
     );
   }
@@ -311,11 +312,11 @@ class _WBTextFieldState extends State<WBTextField> {
   }
 
   void _onTapOutside(event) {
-    print("_ON TAP OUTSIDE");
-    if (optionsOverlayEntry != null) {
-      return;
-    }
-    controller.focusNode.unfocus();
+    // print("_ON TAP OUTSIDE");
+    // if (optionsOverlayEntry != null) {
+    //   return;
+    // }
+    // controller.focusNode.unfocus();
   }
 
   void _showDatePicker() async {

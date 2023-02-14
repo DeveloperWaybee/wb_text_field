@@ -27,6 +27,7 @@ class WBTextFieldDefaultConfig {
     required this.maxLength,
     required this.obscureText,
     required this.obscuringCharacter,
+    required this.textCapitalization,
     // Text Field
     // Date Time Picker
     required this.initialDate,
@@ -63,6 +64,7 @@ class WBTextFieldDefaultConfig {
   int maxLines;
   bool obscureText;
   String obscuringCharacter;
+  TextCapitalization textCapitalization;
 
   // -- Date Picker
   DateTime initialDate;

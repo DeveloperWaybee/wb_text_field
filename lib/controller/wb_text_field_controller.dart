@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wb_text_field/config/wb_text_field_default_config.dart';
@@ -53,6 +51,7 @@ class WBTextFieldController {
     maxLength: 200,
     obscureText: false,
     obscuringCharacter: "*",
+    textCapitalization: TextCapitalization.words,
     isClearEnable: true,
     clearButtonColor: const Color(0xFF9A9A9A),
     clearVisibilityAlways: false,
@@ -101,6 +100,7 @@ class WBTextFieldController {
     this.enabled,
     bool? obscureText,
     String? obscuringCharacter,
+    TextCapitalization? textCapitalization,
     TextInputFormatFunction? inputFormatter,
     this.didChange,
     this.onSaved,
@@ -162,6 +162,8 @@ class WBTextFieldController {
     this.obscureText = obscureText ?? WBTextFieldController.config.obscureText;
     this.obscuringCharacter =
         obscuringCharacter ?? WBTextFieldController.config.obscuringCharacter;
+    this.textCapitalization =
+        textCapitalization ?? WBTextFieldController.config.textCapitalization;
     this.inputFormatter = (oldValue, newValue) {
       if (newValue.text.length > this.maxLength) {
         return oldValue;
@@ -233,6 +235,7 @@ class WBTextFieldController {
   final bool? enabled;
   late final bool obscureText;
   late final String obscuringCharacter;
+  late final TextCapitalization textCapitalization;
   late final TextInputFormatFunction inputFormatter;
   final void Function(String text)? didChange;
   final void Function(String?)? onSaved;
