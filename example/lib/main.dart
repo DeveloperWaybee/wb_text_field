@@ -55,9 +55,9 @@ final list = List.generate(100, (index) {
 
 final controller = WBTextFieldController(
   label: "Date of Birth",
-  isClearEnable: true,
-  clearVisibilityAlways: true,
-  maxLength: 10,
+  // isClearEnable: true,
+  // clearVisibilityAlways: true,
+  // maxLength: 10,
   // datePicker: true,
   // timePicker: true,
   // didSelectDateTime: (date, time) {
@@ -65,17 +65,17 @@ final controller = WBTextFieldController(
   // },
   // suffix: Icons.ac_unit_rounded,
   // suffixColor: Colors.grey,
-  itemBuilderMaxHeight: 200,
-  enableItemSearch: true,
-  itemBuilderHeader: const Padding(
-    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-    child: Text("Create New +"),
-  ),
-  itemBuilderHeaderTapped: (text) async {
-    return "Create New +";
-  },
-  items: list,
-  itemDidSelect: (id) async {
-    return list.firstWhere((e) => e.uniqueId == id).matchText;
-  },
+  // itemBuilderMaxHeight: 200,
+  // enableItemSearch: true,
+  // itemBuilderHeader: const Padding(
+  //   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+  //   child: Text("Create New +"),
+  // ),
+  // itemBuilderHeaderTapped: (text) async {
+  //   return "Create New +";
+  // },
+  // items: list,
+  // itemDidSelect: (id) async {
+  //   return list.firstWhere((e) => e.uniqueId == id).matchText;
+  // },
 );

@@ -165,78 +165,114 @@ class _WBTextFieldState extends State<WBTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      key: widget._widgetKey,
-      decoration: BoxDecoration(
-        border: () {
-          if (hasFocus) {
-            return controller.focusBorder;
-          } else if (hasError) {
-            return controller.errorBorder;
-          } else {
-            return controller.border;
-          }
-        }(),
-        borderRadius: controller.borderRadius,
-      ),
-      child: TextFormField(
-        controller: controller.editingController,
-        focusNode: controller.focusNode,
-        onChanged: (value) {
-          if (controller.didChange != null) {
-            controller.didChange!(value);
-          }
-          if (controller.enableItemSearch ?? false) {
-            // optionsOverlayEntry?.markNeedsBuild();
-          }
-        },
-        onTap: _onTap,
-        onTapOutside: _onTapOutside,
-        onSaved: (newValue) {
-          if (controller.onSaved != null) {
-            controller.onSaved!(newValue);
-          }
-        },
-        onEditingComplete: () {
-          if (controller.onEditingComplete != null) {
-            controller.onEditingComplete!(controller.editingController.text);
-          }
-        },
-        onFieldSubmitted: (value) {
-          // controller.focusNode.nextFocus();
-
-          if (controller.onFieldSubmitted != null) {
-            controller.onFieldSubmitted!(value);
-          }
-        },
-        readOnly: () {
-          readOnly = !(controller.enableItemSearch ?? true) ||
-              isDatePicker ||
-              isTimePicker;
-          return readOnly;
-        }(),
-        enabled: controller.enabled,
-        inputFormatters: [
-          TextInputFormatter.withFunction(controller.inputFormatter),
-        ],
-        decoration: InputDecoration(
-          contentPadding: contentPadding,
-          border: InputBorder.none,
-          label: label,
-          alignLabelWithHint: false,
-          labelStyle: labelStyle,
-          hintText: controller.hint,
-          hintStyle: controller.hintStyle,
-          suffixIcon: suffixIcon,
+    return Focus(
+      focusNode: controller.focusNode,
+      onFocusChange: (value) {
+        if (hasFocus != value) {
+          WidgetsFlutterBinding.ensureInitialized()
+              .addPostFrameCallback((timeStamp) async {
+            setState(() {
+              hasFocus = value;
+              if (readOnly && hasFocus) {
+                if (isDatePicker || isTimePicker) {
+                  // controller.focusNode.unfocus();
+                } else {
+                  _onTap();
+                }
+              } else if (!hasFocus) {
+                // WidgetsFlutterBinding.ensureInitialized()
+                //     .addPostFrameCallback((timeStamp) async {
+                //   Future.delayed(const Duration(milliseconds: 500)).then((value) {
+                //     // _onResignFocus();
+                //   });
+                // });
+              }
+            });
+          });
+        }
+        if (showClear !=
+                (hasFocus && controller.editingController.text.isNotEmpty) &&
+            controller.isClearEnable) {
+          setState(() {
+            showClear =
+                (hasFocus && controller.editingController.text.isNotEmpty) &&
+                    controller.isClearEnable;
+          });
+        }
+      },
+      child: Container(
+        key: widget._widgetKey,
+        decoration: BoxDecoration(
+          border: () {
+            if (hasFocus) {
+              return controller.focusBorder;
+            } else if (hasError) {
+              return controller.errorBorder;
+            } else {
+              return controller.border;
+            }
+          }(),
+          borderRadius: controller.borderRadius,
         ),
-        style: style,
-        textAlignVertical: verticalAlignment,
-        maxLines: controller.maxLines,
-        keyboardType: controller.textInputType,
-        textInputAction: controller.returnKeyType,
-        obscureText: controller.obscureText,
-        obscuringCharacter: controller.obscuringCharacter,
-        textCapitalization: controller.textCapitalization,
+        child: TextFormField(
+          controller: controller.editingController,
+          // focusNode: controller.focusNode,
+          onChanged: (value) {
+            if (controller.didChange != null) {
+              controller.didChange!(value);
+            }
+            if (controller.enableItemSearch ?? false) {
+              // optionsOverlayEntry?.markNeedsBuild();
+            }
+          },
+          onTap: _onTap,
+          onTapOutside: _onTapOutside,
+          onSaved: (newValue) {
+            if (controller.onSaved != null) {
+              controller.onSaved!(newValue);
+            }
+          },
+          onEditingComplete: () {
+            if (controller.onEditingComplete != null) {
+              controller.onEditingComplete!(controller.editingController.text);
+            }
+          },
+          onFieldSubmitted: (value) {
+            // controller.focusNode.nextFocus();
+
+            if (controller.onFieldSubmitted != null) {
+              controller.onFieldSubmitted!(value);
+            }
+          },
+          readOnly: () {
+            readOnly = !(controller.enableItemSearch ?? true) ||
+                isDatePicker ||
+                isTimePicker;
+            return readOnly;
+          }(),
+          enabled: controller.enabled,
+          inputFormatters: [
+            TextInputFormatter.withFunction(controller.inputFormatter),
+          ],
+          decoration: InputDecoration(
+            contentPadding: contentPadding,
+            border: InputBorder.none,
+            label: label,
+            alignLabelWithHint: false,
+            labelStyle: labelStyle,
+            hintText: controller.hint,
+            hintStyle: controller.hintStyle,
+            suffixIcon: suffixIcon,
+          ),
+          style: style,
+          textAlignVertical: verticalAlignment,
+          maxLines: controller.maxLines,
+          keyboardType: controller.textInputType,
+          textInputAction: controller.returnKeyType,
+          obscureText: controller.obscureText,
+          obscuringCharacter: controller.obscuringCharacter,
+          textCapitalization: controller.textCapitalization,
+        ),
       ),
     );
   }
